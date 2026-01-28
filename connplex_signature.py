@@ -79,3 +79,6 @@ def root():
         "status": "running",
         "image_endpoint": "/signature/connplex.png"
     }
+@app.get("/favicon.ico")
+def favicon():
+    return Response(status_code=204)

@@ -9,46 +9,55 @@ STOCK_API = "https://connplex-activeled.onrender.com/data"
 
 @app.get("/signature/connplex.png")
 def connplex_signature():
-    response = requests.get(
+
+    s = requests.get(
         STOCK_API,
         headers={"User-Agent": "Mozilla/5.0"},
         timeout=5
-    )
+    ).json()["stock"]
 
-    data = response.json()
-    s = data["stock"]   # ✅ IMPORTANT
-
-    img = Image.new("RGB", (640, 160), "#000000")
+    # Image size EXACT like your design
+    W, H = 900, 160
+    img = Image.new("RGB", (W, H), "#000000")
     draw = ImageDraw.Draw(img)
 
     try:
-        font_big = ImageFont.truetype("arial.ttf", 36)
-        font_mid = ImageFont.truetype("arial.ttf", 24)
-        font_small = ImageFont.truetype("arial.ttf", 18)
+        font_title = ImageFont.truetype("arial.ttf", 20)
+        font_symbol = ImageFont.truetype("arial.ttf", 16)
+        font_price = ImageFont.truetype("arial.ttf", 32)
+        font_change = ImageFont.truetype("arial.ttf", 22)
+        font_time = ImageFont.truetype("arial.ttf", 14)
     except:
-        font_big = font_mid = font_small = ImageFont.load_default()
+        font_title = font_symbol = font_price = font_change = font_time = ImageFont.load_default()
 
-    # Title
-    draw.text((20, 10), "Connplex Cinema", fill="#ffffff", font=font_mid)
+    # --- LEFT BLOCK ---
+    draw.text((30, 25), "Connplex Cinema", fill="#CFCFCF", font=font_title)
+    draw.text((30, 50), s["symbol"], fill="#8A8A8A", font=font_symbol)
 
-    # Stock symbol
-    draw.text((20, 45), s["symbol"], fill="#aaaaaa", font=font_small)
-
-    # Price
-    draw.text((20, 75), f'₹ {s["price"]:.2f}', fill="#00ff66", font=font_big)
-
-    # Change
-    color = "#00ff66" if s["change"] >= 0 else "#ff3333"
     draw.text(
-        (320, 90),
-        f'{s["change"]:+.2f} ({s["change_percent"]}%)',
-        fill=color,
-        font=font_mid
+        (30, 80),
+        f"₹ {s['price']:.2f}",
+        fill="#00FF66",
+        font=font_price
     )
 
-    # Time
+    # --- CENTER / RIGHT CHANGE ---
+    change_color = "#00FF66" if s["change"] >= 0 else "#FF4444"
+    draw.text(
+        (420, 90),
+        f"{s['change']:+.2f} ({s['change_percent']}%)",
+        fill=change_color,
+        font=font_change
+    )
+
+    # --- TIME ---
     now = datetime.datetime.now().strftime("%H:%M:%S")
-    draw.text((20, 130), f"Updated: {now}", fill="#666666", font=font_small)
+    draw.text(
+        (30, 130),
+        f"Updated: {now}",
+        fill="#6F6F6F",
+        font=font_time
+    )
 
     buf = io.BytesIO()
     img.save(buf, format="PNG")

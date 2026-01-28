@@ -72,3 +72,10 @@ def connplex_signature():
             "Expires": "0"
         }
     )
+@app.get("/")
+def root():
+    return {
+        "service": "Connplex Live Email Signature",
+        "status": "running",
+        "image_endpoint": "/signature/connplex.png"
+    }

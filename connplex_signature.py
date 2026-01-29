@@ -107,9 +107,6 @@ def connplex_full_signature():
         font=text
     )
 
-    now = datetime.datetime.now().strftime("%H:%M:%S")
-    draw.text((30, 290), f"Updated: {now}", fill="#666666", font=small)
-
     buf = io.BytesIO()
     img.save(buf, format="PNG")
     buf.seek(0)

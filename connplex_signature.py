@@ -68,44 +68,63 @@ def connplex_signature():
         }
     )
 
-
-# ---------------- FULL SIGNATURE (ALL-IN-ONE IMAGE)
+# ---------------- FULL SIGNATURE (WHITE + LOGO)
 @app.get("/signature/connplex-full.png")
 def connplex_full_signature():
 
-    s = requests.get(STOCK_API).json()["stock"]
+    s = requests.get(
+        STOCK_API,
+        headers={"User-Agent": "Mozilla/5.0"},
+        timeout=5
+    ).json()["stock"]
 
     W, H = 900, 420
-    img = Image.new("RGB", (W, H), "#000000")
+    img = Image.new("RGB", (W, H), "#FFFFFF")  # ✅ WHITE BACKGROUND
     draw = ImageDraw.Draw(img)
 
     try:
-        title = ImageFont.truetype("arial.ttf", 26)
-        text = ImageFont.truetype("arial.ttf", 18)
-        price = ImageFont.truetype("arial.ttf", 30)
-        small = ImageFont.truetype("arial.ttf", 14)
+        title = ImageFont.truetype("arial.ttf", 22)
+        text = ImageFont.truetype("arial.ttf", 16)
+        bold = ImageFont.truetype("arial.ttf", 18)
+        price = ImageFont.truetype("arial.ttf", 28)
+        small = ImageFont.truetype("arial.ttf", 13)
     except:
-        title = text = price = small = ImageFont.load_default()
+        title = text = bold = price = small = ImageFont.load_default()
 
-    draw.text((30, 20), "Kunal Jani", fill="#FFFFFF", font=title)
-    draw.text((30, 55), "General Manager – Technology", fill="#BBBBBB", font=text)
-    draw.text((30, 80), "+91 98245 38537", fill="#BBBBBB", font=text)
+    # ---------- LOGO ----------
+    try:
+        logo = Image.open("assets/connplex_bg.png").convert("RGBA")
+        logo = logo.resize((90, 90))
+        img.paste(logo, (30, 20), logo)
+    except:
+        pass  # logo missing → don't crash
 
-    draw.text((30, 120), "CONNPLEX CINEMAS LIMITED", fill="#FFD700", font=text)
-    draw.text((30, 145), "Ahmedabad, Gujarat", fill="#888888", font=small)
+    # ---------- PERSONAL INFO ----------
+    draw.text((140, 25), "Kunal Jani", fill="#000000", font=title)
+    draw.text((140, 50), "General Manager – Technology", fill="#444444", font=text)
+    draw.text((140, 72), "+91 98245 38537", fill="#444444", font=text)
 
-    draw.line((30, 180, 870, 180), fill="#333333", width=1)
+    # ---------- COMPANY ----------
+    draw.text((30, 120), "CONNPLEX CINEMAS LIMITED", fill="#C9A100", font=bold)
+    draw.text((30, 145), "Ahmedabad, Gujarat", fill="#666666", font=small)
 
-    draw.text((30, 200), s["symbol"], fill="#AAAAAA", font=small)
-    draw.text((30, 225), f"₹ {s['price']:.2f}", fill="#00FF66", font=price)
+    # Divider
+    draw.line((30, 180, 870, 180), fill="#DDDDDD", width=1)
 
-    change_color = "#00FF66" if s["change"] >= 0 else "#FF4444"
+    # ---------- STOCK ----------
+    draw.text((30, 200), s["symbol"], fill="#777777", font=small)
+    draw.text((30, 225), f"₹ {s['price']:.2f}", fill="#00AA44", font=price)
+
+    change_color = "#00AA44" if s["change"] >= 0 else "#CC0000"
     draw.text(
-        (400, 240),
+        (420, 235),
         f"{s['change']:+.2f} ({s['change_percent']}%)",
         fill=change_color,
         font=text
     )
+
+    now = datetime.datetime.now().strftime("%H:%M:%S")
+    draw.text((30, 270), f"Updated: {now}", fill="#888888", font=small)
 
     buf = io.BytesIO()
     img.save(buf, format="PNG")
